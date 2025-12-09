@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
+import '../models/recipe.dart';
 import '../services/api_service.dart';
 import '../widgets/category_card.dart';
 import 'meals_screen.dart';
-import '../models/meal_detail.dart';
+import 'favorites_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
+  final List<Recipe> recipes;
+  final void Function(Recipe) toggleFavorite;
+
+  const CategoriesScreen({
+    Key? key,
+    required this.recipes,
+    required this.toggleFavorite,
+  }) : super(key: key);
+
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
@@ -27,7 +36,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         _filtered = value;
       });
     }).catchError((e) {
-      // handle
+      // handle error
     });
   }
 
@@ -39,22 +48,26 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
-  Future<void> _openRandom() async {
-    try {
-      final meal = await ApiService.fetchRandomMeal();
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MealsScreen(
-            categoryName: meal.category,
-            initialRandomMeal: meal,
-          ),
+  void _openCategory(Category cat) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MealsScreen(
+          categoryName: cat.name,
+          recipes: widget.recipes.where((r) => r.category == cat.name).toList(),
+          toggleFavorite: widget.toggleFavorite,
         ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Не може да се преземе рандом рецепт: $e')));
-    }
+      ),
+    );
+  }
+
+  void _openFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FavoritesScreen(recipes: widget.recipes, toggleFavorite: (Recipe p1) {  },),
+      ),
+    );
   }
 
   @override
@@ -70,9 +83,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: const Text('Категории'),
         actions: [
           IconButton(
-            tooltip: 'Рандом рецепт',
-            icon: const Icon(Icons.shuffle),
-            onPressed: _openRandom,
+            icon: const Icon(Icons.favorite),
+            tooltip: 'Омилени рецепти',
+            onPressed: _openFavorites,
           ),
         ],
       ),
@@ -112,14 +125,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   itemBuilder: (context, index) {
                     final cat = _filtered[index];
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MealsScreen(categoryName: cat.name),
-                          ),
-                        );
-                      },
+                      onTap: () => _openCategory(cat),
                       child: CategoryCard(category: cat),
                     );
                   },

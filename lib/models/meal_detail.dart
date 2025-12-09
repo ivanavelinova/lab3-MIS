@@ -5,8 +5,8 @@ class MealDetail {
   final String area;
   final String instructions;
   final String thumbnail;
-  final String youtube;
-  final Map<String, String> ingredients; // ingredient -> measure
+  final String youtube; // URL за YouTube
+  final Map<String, String> ingredients; // Map на состојки и количини
 
   MealDetail({
     required this.id,
@@ -20,12 +20,13 @@ class MealDetail {
   });
 
   factory MealDetail.fromJson(Map<String, dynamic> json) {
-    final Map<String, String> ing = {};
-    for (int i = 1; i <= 20; i++) {
-      final k = json['strIngredient$i'];
-      final v = json['strMeasure$i'];
-      if (k != null && k.toString().trim().isNotEmpty) {
-        ing[k.toString()] = v?.toString() ?? '';
+    // ingredients се извлекуваат од strIngredient1..strIngredient20 и strMeasure1..strMeasure20
+    final Map<String, String> ingredients = {};
+    for (var i = 1; i <= 20; i++) {
+      final ingredient = json['strIngredient$i'];
+      final measure = json['strMeasure$i'];
+      if (ingredient != null && ingredient.toString().trim().isNotEmpty) {
+        ingredients[ingredient.toString()] = measure?.toString() ?? '';
       }
     }
 
@@ -37,7 +38,7 @@ class MealDetail {
       instructions: json['strInstructions'] ?? '',
       thumbnail: json['strMealThumb'] ?? '',
       youtube: json['strYoutube'] ?? '',
-      ingredients: ing,
+      ingredients: ingredients,
     );
   }
 }

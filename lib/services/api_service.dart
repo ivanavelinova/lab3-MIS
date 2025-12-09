@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/category.dart';
 import '../models/meal_summary.dart';
 import '../models/meal_detail.dart';
+import '../models/recipe.dart';
 
 class ApiService {
   static const _base = 'https://www.themealdb.com/api/json/v1/1';
@@ -52,5 +53,24 @@ class ApiService {
     final List list = jsonBody['meals'] ?? [];
     if (list.isEmpty) throw Exception('No random meal');
     return MealDetail.fromJson(list[0]);
+  }
+
+  // ---- Нов метод за Recipe модел ----
+  Future<List<Recipe>> fetchRecipes() async {
+    final categories = await fetchCategories();
+    List<Recipe> allRecipes = [];
+
+    for (var cat in categories) {
+      final meals = await fetchMealsByCategory(cat.name);
+      allRecipes.addAll(meals.map((m) => Recipe(
+        id: m.id,
+        title: m.name,
+        imageUrl: m.thumbnail,
+        category: cat.name,
+        isFavorite: false,
+      )));
+    }
+
+    return allRecipes;
   }
 }
